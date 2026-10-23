@@ -10,12 +10,15 @@ export class BankDepositsService {
     if (createBankDepositDto.date) {
       dateToSave = new Date(`${createBankDepositDto.date}T00:00:00+08:00`);
     }
-    
+
+    const remarks = createBankDepositDto.remarks?.trim?.() || null;
+
     return this.prisma.bankDeposit.create({
       data: {
         date: dateToSave,
         amount: createBankDepositDto.amount,
         depositType: createBankDepositDto.depositType,
+        remarks,
       },
     });
   }
