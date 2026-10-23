@@ -32,6 +32,14 @@ const SettingsContext = createContext<SettingsContextType>({
 
 export const useSettings = () => useContext(SettingsContext);
 
+const normalizeCurrencyValue = (amount: number | string) => {
+  const num = Number(amount) || 0;
+  if (!Number.isFinite(num)) {
+    return 0;
+  }
+  return Math.trunc(num * 100) / 100;
+};
+
 export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   const { data: settings, isLoading } = useQuery({
     queryKey: ['settings'],
@@ -44,7 +52,7 @@ export const SettingsProvider = ({ children }: { children: ReactNode }) => {
   });
 
   const formatCurrency = (amount: number | string) => {
-    const num = Number(amount) || 0;
+    const num = normalizeCurrencyValue(amount);
     const formatted = num.toFixed(2);
     const symbol = settings?.currencySymbol || 'RM';
     const position = settings?.currencyPosition || 'before';

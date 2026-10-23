@@ -53,12 +53,12 @@ export const exportTableToPdf = (
 
     autoTable(doc, {
       columns,
-      body: bodyRows,
+      body: bodyRows.slice(0, -1),
       foot: footRows,
       showFoot: 'lastPage',
       startY: currentY,
       styles: {
-        fontSize: 9,
+        fontSize: 11,
         cellPadding: 3,
         lineColor: [203, 213, 225],
         lineWidth: 0.2,
@@ -67,7 +67,7 @@ export const exportTableToPdf = (
         fillColor: [15, 23, 42],
         textColor: 255,
         fontStyle: 'bold',
-        fontSize: 9,
+        fontSize: 11,
       },
       alternateRowStyles: {
         fillColor: [248, 250, 252],
@@ -76,7 +76,21 @@ export const exportTableToPdf = (
         fillColor: [241, 245, 249],
         textColor: 0,
         fontStyle: 'bold',
-        fontSize: 9,
+        fontSize: 11,
+      },
+      didParseCell: ({ cell, row }) => {
+        const rawRow = row.raw as Record<string, any> | HTMLTableRowElement | undefined;
+        const isSubtotal = !!(
+          rawRow &&
+          typeof rawRow === 'object' &&
+          '__isSubtotal' in rawRow &&
+          (rawRow as Record<string, any>).__isSubtotal
+        );
+
+        if (isSubtotal) {
+          cell.styles.fontStyle = 'bold';
+          cell.styles.textColor = [0, 0, 0];
+        }
       },
       margin: { top: 10, left: 10, right: 10 },
     });

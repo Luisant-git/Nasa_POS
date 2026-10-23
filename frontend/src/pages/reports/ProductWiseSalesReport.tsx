@@ -11,6 +11,19 @@ import { useSettings } from '../../contexts/SettingsContext';
 import SearchableSelect from '../../components/SearchableSelect';
 import { useNavigate } from 'react-router-dom';
 
+const normalizeCurrencyValue = (amount: number | string) => {
+  const num = Number(amount) || 0;
+  if (!Number.isFinite(num)) return 0;
+  return Math.trunc(num * 100) / 100;
+};
+
+const normalizeDecimalValue = (value: number | string) => {
+  const num = Number(value) || 0;
+  if (!Number.isFinite(num)) return '0';
+  const truncated = Math.trunc(num * 100) / 100;
+  return Number(truncated.toFixed(2)).toString();
+};
+
 const ProductWiseSalesReport = () => {
   const { formatCurrency, settings } = useSettings();
   const navigate = useNavigate();
@@ -48,16 +61,16 @@ const ProductWiseSalesReport = () => {
           'Product Name': group.productName,
           'Invoice No': item.invoiceNo,
           'Date': formatMalaysiaDate(item.date),
-          'Qty': item.qty,
-          'Sales Value': item.value
+          'Qty': normalizeDecimalValue(item.qty),
+          'Sales Value': normalizeCurrencyValue(item.value)
         });
       });
       exportData.push({
         'Product Name': `SUBTOTAL: ${group.productName}`,
         'Invoice No': '',
         'Date': '',
-        'Qty': group.totalQty,
-        'Sales Value': group.totalValue
+        'Qty': normalizeDecimalValue(group.totalQty),
+        'Sales Value': normalizeCurrencyValue(group.totalValue)
       });
     });
 
@@ -84,16 +97,18 @@ const ProductWiseSalesReport = () => {
           productName: group.productName,
           invoiceNo: item.invoiceNo,
           date: formatMalaysiaDate(item.date),
-          qty: item.qty,
-          value: formatCurrency(item.value)
+          qty: normalizeDecimalValue(item.qty),
+          value: formatCurrency(normalizeCurrencyValue(item.value)),
+          __isSubtotal: false,
         });
       });
       pdfData.push({
         productName: `SUBTOTAL: ${group.productName}`,
         invoiceNo: '',
         date: '',
-        qty: group.totalQty.toString(),
-        value: formatCurrency(group.totalValue)
+        qty: normalizeDecimalValue(group.totalQty),
+        value: formatCurrency(normalizeCurrencyValue(group.totalValue)),
+        __isSubtotal: true,
       });
     });
 
@@ -212,7 +227,7 @@ const ProductWiseSalesReport = () => {
                               {item.invoiceNo} <span className="text-gray-500 font-bold text-[11px] ml-2">({formatMalaysiaDate(item.date)})</span>
                             </td>
                             <td className="px-4 py-1.5 border-r border-[#E2E8F0] text-right text-black font-bold">
-                              {item.qty}
+                              {normalizeDecimalValue(item.qty)}
                             </td>
                             <td className="px-4 py-1.5 text-right font-bold text-[#059669]">
                               {formatCurrency(item.value)}
@@ -226,7 +241,7 @@ const ProductWiseSalesReport = () => {
                             Subtotal
                           </td>
                           <td className="px-4 py-2 border-r border-[#E2E8F0] font-bold text-[#2563EB] text-right">
-                            {group.totalQty}
+                            {normalizeDecimalValue(group.totalQty)}
                           </td>
                           <td className="px-4 py-2 font-bold text-[#2563EB] text-right">
                             {formatCurrency(group.totalValue)}
