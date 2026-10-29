@@ -26,6 +26,7 @@ import { WhatsappModule } from './whatsapp/whatsapp.module';
 import { ReportsModule } from './reports/reports.module';
 import { RolesModule } from './roles/roles.module';
 import { BankDepositsModule } from './bank-deposits/bank-deposits.module';
+import { EmployeesModule } from './employees/employees.module';
 
 @Module({
   imports: [
@@ -53,7 +54,8 @@ import { BankDepositsModule } from './bank-deposits/bank-deposits.module';
     WhatsappModule,
     ReportsModule,
     RolesModule,
-    BankDepositsModule
+    BankDepositsModule,
+    EmployeesModule
   ],
   controllers: [AppController],
   providers: [AppService],
