@@ -108,6 +108,21 @@ export class EmployeesService {
     });
   }
 
+  async remove(id: number) {
+    await this.findOne(id);
+    const attendanceCount = await this.prisma.employeeAttendance.count({
+      where: { employeeId: id },
+    });
+    if (attendanceCount > 0) {
+      throw new BadRequestException(
+        `Cannot delete employee because ${attendanceCount} attendance record(s) exist. Please change status to Inactive instead.`,
+      );
+    }
+    return this.prisma.employee.delete({
+      where: { id },
+    });
+  }
+
   async getAttendanceRoster(dateString?: string) {
     const todayMalaysia = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date());
     const date = this.parseDate(dateString ?? todayMalaysia);

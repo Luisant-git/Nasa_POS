@@ -8,6 +8,7 @@ describe('EmployeesService', () => {
       findUnique: jest.fn(),
       create: jest.fn(),
       update: jest.fn(),
+      delete: jest.fn(),
     },
     employeeAttendance: {
       findMany: jest.fn(),
@@ -96,5 +97,23 @@ describe('EmployeesService', () => {
       where: { employeeId_date: { employeeId: 3, date: new Date('2026-10-29T00:00:00.000Z') } },
       create: expect.objectContaining({ checkInTime: '08:30', checkOutTime: '17:00', remarks: 'On time' }),
     }));
+  });
+
+  it('deletes an employee when no attendance records exist', async () => {
+    prisma.employee.findUnique.mockResolvedValue({ id: 5 });
+    prisma.employeeAttendance.count.mockResolvedValue(0);
+    prisma.employee.delete.mockResolvedValue({ id: 5 });
+
+    await service.remove(5);
+
+    expect(prisma.employee.delete).toHaveBeenCalledWith({ where: { id: 5 } });
+  });
+
+  it('prevents deleting an employee if attendance records exist', async () => {
+    prisma.employee.findUnique.mockResolvedValue({ id: 5 });
+    prisma.employeeAttendance.count.mockResolvedValue(3);
+
+    await expect(service.remove(5)).rejects.toBeInstanceOf(BadRequestException);
+    expect(prisma.employee.delete).not.toHaveBeenCalled();
   });
 });
