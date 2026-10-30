@@ -58,12 +58,33 @@ type AttendancePayload = Omit<AttendanceDraft, 'checkInTime' | 'checkOutTime'> &
 const fieldClass = 'h-10 rounded-sm border border-[#CCC] bg-white px-3 text-sm font-bold text-black shadow-inner outline-none transition focus:border-[#3B82F6] focus:bg-[#EBF5FF] focus:ring-0';
 const statuses: AttendanceStatus[] = ['Present', 'Absent', 'Half Day', 'On Leave', 'Not Marked'];
 const pageSizes = [10, 25, 50, 100, 99999];
+const MALAYSIA_TZ = 'Asia/Kuala_Lumpur';
+
 const localDateString = (date = new Date()) => {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: MALAYSIA_TZ,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).formatToParts(date);
+  const year = parts.find((p) => p.type === 'year')?.value;
+  const month = parts.find((p) => p.type === 'month')?.value;
+  const day = parts.find((p) => p.type === 'day')?.value;
+  return `${year}-${month}-${day}`;
 };
+
 const formatDate = (date: string) => new Date(`${date.slice(0, 10)}T00:00:00Z`).toLocaleDateString('en-GB', { timeZone: 'UTC' });
-const getCurrentTime = (now = new Date()) => {
-  return `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+const getCurrentTime = (date = new Date()) => {
+  const parts = new Intl.DateTimeFormat('en-GB', {
+    timeZone: MALAYSIA_TZ,
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(date);
+  const hour = parts.find((p) => p.type === 'hour')?.value || '00';
+  const minute = parts.find((p) => p.type === 'minute')?.value || '00';
+  return `${hour}:${minute}`;
 };
 const formatTime12Hour = (value: string | null | undefined) => {
   const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(value || '');
@@ -409,8 +430,8 @@ export default function EmployeeAttendance() {
                       <th className="border-r border-[#444] px-3 py-2.5">Employee Code</th>
                       <th className="border-r border-[#444] px-3 py-2.5">Employee Name</th>
                       <th className="border-r border-[#444] px-3 py-2.5">Role</th>
-                      <th className="border-r border-[#444] px-3 py-2.5">Check-in</th>
-                      <th className="border-r border-[#444] px-3 py-2.5">Check-out</th>
+                      <th className="border-r border-[#444] px-3 py-2.5">Check-in (MYT)</th>
+                      <th className="border-r border-[#444] px-3 py-2.5">Check-out (MYT)</th>
                       <th className="border-r border-[#444] px-3 py-2.5">Attendance Status</th>
                       <th className="border-r border-[#444] px-3 py-2.5">Remarks</th>
                       <th className="px-3 py-2.5 text-right">Action</th>
@@ -501,7 +522,7 @@ export default function EmployeeAttendance() {
                 <table className="w-full min-w-[960px] text-left text-[13px] text-black">
                   <thead>
                     <tr className="bg-[#2A2A2A] font-bold text-white">
-                      {['Date', 'Employee Code', 'Employee Name', 'Role', 'Check-in', 'Check-out', 'Status', 'Remarks'].map((column) => <th key={column} className="border-r border-[#444] px-3 py-2.5 last:border-r-0">{column}</th>)}
+                      {['Date', 'Employee Code', 'Employee Name', 'Role', 'Check-in (MYT)', 'Check-out (MYT)', 'Status', 'Remarks'].map((column) => <th key={column} className="border-r border-[#444] px-3 py-2.5 last:border-r-0">{column}</th>)}
                     </tr>
                   </thead>
                   <tbody>
@@ -543,7 +564,7 @@ export default function EmployeeAttendance() {
             <header className="flex items-start justify-between gap-4 bg-gradient-to-r from-[#3867E8] to-[#4969E8] px-5 py-3.5 text-white">
               <div>
                 <h2 id="attendance-modal-title" className="text-sm font-bold">Employee Attendance: {selectedEmployee.name}</h2>
-                <p className="mt-0.5 text-xs font-medium text-blue-100">{selectedEmployee.employeeCode} · {selectedEmployee.role}</p>
+                <p className="mt-0.5 text-xs font-medium text-blue-100">{selectedEmployee.employeeCode} · {selectedEmployee.role} · Malaysia Time (MYT / GMT+8)</p>
               </div>
               <button type="button" aria-label="Close dialog" onClick={closeAttendanceModal} className="rounded-full bg-white/20 p-1.5 text-white transition-colors hover:bg-white/35 disabled:opacity-50" disabled={saveMutation.isPending}><X size={17} /></button>
             </header>
@@ -551,13 +572,13 @@ export default function EmployeeAttendance() {
               <div className="space-y-3.5 p-5">
                 <div className="grid gap-3 sm:grid-cols-2">
                   <TimeInput
-                    label="Check-in time"
+                    label="Check-in time (MYT)"
                     value={attendanceDraft.checkInTime}
                     onChange={handleCheckInChange}
                     onNow={() => handleCheckInChange(getCurrentTime())}
                   />
                   <TimeInput
-                    label="Check-out time"
+                    label="Check-out time (MYT)"
                     value={attendanceDraft.checkOutTime}
                     onChange={handleCheckOutChange}
                     onNow={() => handleCheckOutChange(getCurrentTime())}

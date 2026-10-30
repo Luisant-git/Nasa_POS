@@ -109,7 +109,8 @@ export class EmployeesService {
   }
 
   async getAttendanceRoster(dateString?: string) {
-    const date = this.parseDate(dateString ?? new Date().toISOString().slice(0, 10));
+    const todayMalaysia = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kuala_Lumpur' }).format(new Date());
+    const date = this.parseDate(dateString ?? todayMalaysia);
     const dateStr = date.toISOString().slice(0, 10);
     const [employees, records] = await Promise.all([
       this.prisma.employee.findMany({
